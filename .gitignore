@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+local_settings.py
+db.sqlite3
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+*.sock
+logs/
+media/
+staticfiles/
+
+# macOS
+.DS_Store
+
+# pycache in all folders
+**/__pycache__/

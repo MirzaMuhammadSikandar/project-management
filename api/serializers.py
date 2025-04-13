@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Project
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
@@ -34,4 +34,10 @@ class TokenSerializer(TokenObtainPairSerializer):
         data['email'] = self.user.email
         data['role'] = self.user.role
         return data
-    
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'description', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        

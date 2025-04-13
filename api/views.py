@@ -2,10 +2,12 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import UserSerializer, TokenSerializer
+from .serializers import UserSerializer, TokenSerializer, ProjectSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, permissions
+from .models import Project
 
 class UserViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
@@ -40,4 +42,14 @@ class UserViewSet(viewsets.ViewSet):
             return Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
         except Exception:
             return Response({"detail": "Invalid or expired refresh token"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticated] 
+
+    def get_queryset(self):
+        return Project.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+     

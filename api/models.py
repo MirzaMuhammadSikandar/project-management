@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
+from django.conf import settings
 
 class UserManager(BaseUserManager):
      def create_user(self, email, password=None, role="project_manager", **extra_fields):
@@ -32,4 +33,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+class Project(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="projects")
+
+    def __str__(self):
+        return self.name
     

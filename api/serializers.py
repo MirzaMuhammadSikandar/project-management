@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project
+from .models import User, Project, Task
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
@@ -40,4 +40,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ['id', 'name', 'description', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
-        
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['id', 'project', 'title', 'description', 'is_completed', 'assigned_to', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']

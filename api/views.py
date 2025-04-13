@@ -62,4 +62,24 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='assign')
+    def assign(self, request, pk=None):
+        try:
+            task = self.get_object()
+            user_id = request.data.get("user_id")
+            if not user_id:
+                return Response({"detail": "user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            task.assigned_to = user
+            task.save()
+            return Response({"detail": "Task assigned successfully"}, status=status.HTTP_200_OK)
+        except Task.DoesNotExist:
+            return Response({"detail": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
         

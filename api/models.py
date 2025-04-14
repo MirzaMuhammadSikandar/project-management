@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.conf import settings
 
+# ------------------- USER Manager -------------------------
 class UserManager(BaseUserManager):
      def create_user(self, email, password=None, role="project_manager", **extra_fields):
          if not email:
@@ -18,6 +19,7 @@ class UserManager(BaseUserManager):
          extra_fields.setdefault("is_superuser", True)
          return self.create_user(email, password, role="project_manager", **extra_fields)
 
+# ------------------- USER Model -------------------------
 class User(AbstractUser):
     ROLE_CHOICES = [
         ("project_manager", "Project Manager"),
@@ -34,6 +36,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
     
+# ------------------- PROJECT Model -------------------------
 class Project(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -44,6 +47,7 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
+# ------------------- TASK Model -------------------------
 class Task(models.Model):
     project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="tasks")
     title = models.CharField(max_length=255)
@@ -57,4 +61,16 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+# ------------------- DOCUMENT Model -------------------------    
+class Document(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='documents')
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='documents/')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
     

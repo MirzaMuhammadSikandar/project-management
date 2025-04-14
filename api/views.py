@@ -2,13 +2,15 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer
+from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, permissions
-from .models import Project, Task
+from .models import Project, Task, Document
+from django.contrib.auth import get_user_model
 
+# ------------------- USER View ------------------------- 
 class UserViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
@@ -42,7 +44,9 @@ class UserViewSet(viewsets.ViewSet):
             return Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
         except Exception:
             return Response({"detail": "Invalid or expired refresh token"}, status=status.HTTP_400_BAD_REQUEST)
+        
 
+# ------------------- PROJECT View ------------------------- 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated] 
@@ -53,6 +57,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
+# ------------------- TASK View ------------------------- 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -71,7 +77,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             if not user_id:
                 return Response({"detail": "user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            from django.contrib.auth import get_user_model
             User = get_user_model()
             user = User.objects.filter(id=user_id).first()
             if not user:
@@ -83,3 +88,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         except Task.DoesNotExist:
             return Response({"detail": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
         
+
+# ------------------- DOCUMENT View ------------------------- 
+class DocumentViewSet(viewsets.ModelViewSet):
+    serializer_class = DocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Document.objects.filter(project__owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)

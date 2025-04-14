@@ -2,13 +2,14 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer,CommentSerializer
+from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer, CommentSerializer, TimelineEventSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, permissions
-from .models import Project, Task, Document, Comment
+from .models import Project, Task, Document, Comment, TimelineEvent
 from django.contrib.auth import get_user_model
+from .utils import log_event
 
 # ------------------- USER View ------------------------- 
 class UserViewSet(viewsets.ViewSet):
@@ -55,7 +56,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Project.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        project = serializer.save(owner=self.request.user)
+        log_event( 
+            project,
+            self.request.user,
+            "project_created",
+            f"Project '{project.name}' was created"
+        )
 
 
 # ------------------- TASK View ------------------------- 
@@ -67,7 +74,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.filter(project__owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save()
+        task = serializer.save()
+        log_event(  
+            task.project,
+            self.request.user,
+            "task_created",
+            f"Task '{task.title}' was created"
+        )
 
     @action(detail=True, methods=['post'], url_path='assign')
     def assign(self, request, pk=None):
@@ -84,6 +97,14 @@ class TaskViewSet(viewsets.ModelViewSet):
 
             task.assigned_to = user
             task.save()
+
+            log_event(  
+                task.project,
+                self.request.user,
+                "task_updated",
+                f"Task '{task.title}' was assigned to {user.email}"
+            )
+
             return Response({"detail": "Task assigned successfully"}, status=status.HTTP_200_OK)
         except Task.DoesNotExist:
             return Response({"detail": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -98,7 +119,13 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Document.objects.filter(project__owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user)
+        doc = serializer.save(uploaded_by=self.request.user)
+        log_event( 
+            doc.project,
+            self.request.user,
+            "document_uploaded",
+            f"Document '{doc.name}' uploaded"
+        )
 
 # ------------------- COMMENT View ------------------------- 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -118,4 +145,23 @@ class CommentViewSet(viewsets.ModelViewSet):
         return queryset.order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        comment = serializer.save(user=self.request.user)
+        project = comment.project or comment.task.project
+        log_event(  
+            project,
+            self.request.user,
+            "comment_added",
+            f"Comment added: '{comment.content[:50]}'"
+        )
+
+# ------------------- TIMELINE View ------------------------- 
+class TimelineViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TimelineEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        project_id = self.request.query_params.get("project")
+        if not project_id:
+            return TimelineEvent.objects.none()
+        
+        return TimelineEvent.objects.filter(project__id=project_id).order_by('-created_at')

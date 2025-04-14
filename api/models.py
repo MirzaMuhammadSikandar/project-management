@@ -85,3 +85,20 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.content[:30]}"
+    
+# ------------------- TIMELINE Model -------------------------
+class TimelineEvent(models.Model):
+    EVENT_CHOICES = [
+        ("project_created", "Project Created"),
+        ("task_created", "Task Created"),
+        ("task_updated", "Task Updated"),
+        ("comment_added", "Comment Added"),
+        ("document_uploaded", "Document Uploaded"),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='timeline_events')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    event_type = models.CharField(max_length=50, choices=EVENT_CHOICES)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    

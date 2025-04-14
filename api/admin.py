@@ -1,7 +1,7 @@
 # admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Project, Task, Document
+from .models import User, Project, Task, Document, Comment
 
 class CustomUserAdmin(UserAdmin):
     model = User
@@ -25,3 +25,4 @@ admin.site.register(User, CustomUserAdmin)
 admin.site.register(Project)
 admin.site.register(Task)
 admin.site.register(Document)
+admin.site.register(Comment)

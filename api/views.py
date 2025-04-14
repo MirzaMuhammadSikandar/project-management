@@ -2,12 +2,12 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer
+from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer,CommentSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, permissions
-from .models import Project, Task, Document
+from .models import Project, Task, Document, Comment
 from django.contrib.auth import get_user_model
 
 # ------------------- USER View ------------------------- 
@@ -99,3 +99,23 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
+
+# ------------------- COMMENT View ------------------------- 
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        task_id = self.request.query_params.get('task')
+        project_id = self.request.query_params.get('project')
+        queryset = Comment.objects.all()
+
+        if task_id:
+            queryset = queryset.filter(task__id=task_id)
+        if project_id:
+            queryset = queryset.filter(project__id=project_id)
+        
+        return queryset.order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

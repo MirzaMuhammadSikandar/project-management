@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, Task, Document
+from .models import User, Project, Task, Document, Comment
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.conf import settings
 
@@ -70,3 +70,27 @@ class DocumentSerializer(serializers.ModelSerializer):
         if not obj.file:
             return None
         return f"{settings.MEDIA_HOST}{obj.file.url}"
+
+# ------------------- COMMENT ------------------------- 
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'user', 'project', 'task', 'content', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if self.instance:
+            # Use existing instance values if not provided again
+            project = data.get("project", self.instance.project)
+            task = data.get("task", self.instance.task)
+        else:
+            project = data.get("project")
+            task = data.get("task")
+
+        if not project and not task:
+            raise serializers.ValidationError("Comment must be linked to either a project or a task.")
+        
+        return data
+    

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, Task, Document, Comment
+from .models import User, Project, Task, Document, Comment, TimelineEvent
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.conf import settings
 
@@ -93,4 +93,12 @@ class CommentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Comment must be linked to either a project or a task.")
         
         return data
+    
+# ------------------- TIMELINE ------------------------- 
+class TimelineEventSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = TimelineEvent
+        fields = ['id', 'project', 'user', 'event_type', 'description', 'created_at']
     

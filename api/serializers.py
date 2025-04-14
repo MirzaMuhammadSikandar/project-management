@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from .models import User, Project, Task
+from .models import User, Project, Task, Document
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.conf import settings
 
+# ------------------- USER ------------------------- 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, min_length=8)
 
@@ -19,8 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
     
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+# ------------------- TOKEN ------------------------- 
 class TokenSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -34,15 +35,38 @@ class TokenSerializer(TokenObtainPairSerializer):
         data['email'] = self.user.email
         data['role'] = self.user.role
         return data
-
+    
+# ------------------- PROJECT ------------------------- 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+
+# ------------------- TASK ------------------------- 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ['id', 'project', 'title', 'description', 'is_completed', 'assigned_to', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+# ------------------- DOCUMENT ------------------------- 
+class DocumentSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(write_only=True)
+    file_url = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Document
+        fields = ['id', 'project', 'uploaded_by', 'file', 'file_url', 'name', 'description', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_by', 'uploaded_at', 'file_url']
+
+    def validate_file(self, value):
+        if not value:
+            raise serializers.ValidationError("You must upload a file.")
+        return value
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return None
+        return f"{settings.MEDIA_HOST}{obj.file.url}"

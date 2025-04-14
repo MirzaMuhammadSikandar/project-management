@@ -2,12 +2,12 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer, CommentSerializer, TimelineEventSerializer
+from .serializers import UserSerializer, TokenSerializer, ProjectSerializer, TaskSerializer, DocumentSerializer, CommentSerializer, TimelineEventSerializer, NotificationSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, permissions
-from .models import Project, Task, Document, Comment, TimelineEvent
+from .models import Project, Task, Document, Comment, TimelineEvent, Notification
 from django.contrib.auth import get_user_model
 from .utils import log_event
 
@@ -165,3 +165,12 @@ class TimelineViewSet(viewsets.ReadOnlyModelViewSet):
             return TimelineEvent.objects.none()
         
         return TimelineEvent.objects.filter(project__id=project_id).order_by('-created_at')
+
+# ------------------- NOTIFICATION View ------------------------- 
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+    

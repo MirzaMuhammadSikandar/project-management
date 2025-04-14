@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, Task, Document, Comment, TimelineEvent
+from .models import User, Project, Task, Document, Comment, TimelineEvent, Notification
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.conf import settings
 
@@ -101,4 +101,9 @@ class TimelineEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimelineEvent
         fields = ['id', 'project', 'user', 'event_type', 'description', 'created_at']
-    
+
+# ------------------- NOTIFICATION -------------------------   
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'message', 'is_read', 'created_at']

@@ -174,3 +174,13 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user).order_by('-created_at')
     
+    @action(detail=True, methods=['put'], url_path='mark_read')
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()  
+
+        if notification.user != request.user:
+            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
+        
+        notification.is_read = True
+        notification.save()
+        return Response({"message": "Notification marked as read."}, status=status.HTTP_200_OK)

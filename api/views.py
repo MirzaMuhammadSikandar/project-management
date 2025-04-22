@@ -10,6 +10,7 @@ from rest_framework import viewsets, permissions
 from .models import Project, Task, Document, Comment, TimelineEvent, Notification
 from django.contrib.auth import get_user_model
 from .utils import log_event
+from .tasks import send_registration_email
 
 # ------------------- USER View ------------------------- 
 class UserViewSet(viewsets.ViewSet):
@@ -19,7 +20,8 @@ class UserViewSet(viewsets.ViewSet):
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            send_registration_email.delay(user.email)
             return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

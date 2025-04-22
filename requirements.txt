@@ -12,3 +12,4 @@ sqlparse==0.5.3
 typing_extensions==4.13.2
 djangorestframework-simplejwt
 celery==5.3.6
+celery[redis]

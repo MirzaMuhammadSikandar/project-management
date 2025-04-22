@@ -41,3 +41,6 @@ staticfiles/
 
 # pycache in all folders
 **/__pycache__/
+
+#celery
+celerybeat-schedule

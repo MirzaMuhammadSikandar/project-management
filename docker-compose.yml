@@ -25,6 +25,17 @@ services:
       - web
       - redis
 
+  celery-beat:
+    build: .
+    command: celery -A projectmanagement beat --loglevel=info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - web
+
   nginx:
     image: nginx:alpine
     restart: always
@@ -62,3 +73,4 @@ services:
 
 volumes:
   pgdata:
+  

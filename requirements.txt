@@ -13,3 +13,4 @@ typing_extensions==4.13.2
 djangorestframework-simplejwt
 celery==5.3.6
 celery[redis]
+flower==1.2.0

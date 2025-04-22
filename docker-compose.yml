@@ -36,6 +36,18 @@ services:
       - redis
       - web
 
+  flower:
+    build: .
+    command: celery -A projectmanagement flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - web
+      - celery
+
   nginx:
     image: nginx:alpine
     restart: always
